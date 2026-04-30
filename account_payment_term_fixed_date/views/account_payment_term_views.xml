@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="account_payment_term_form_inherit" model="ir.ui.view">
+        <field name="name">account.payment.term.form.fixed.date</field>
+        <field name="model">account.payment.term</field>
+        <field name="inherit_id" ref="account.view_payment_term_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Add Dia and Mes columns after delay_type in the tree -->
+            <xpath expr="//field[@name='line_ids']//tree//field[@name='delay_type']"
+                   position="after">
+                <field name="fixed_day_formula"
+                    string="Dia"
+                    invisible="delay_type != 'fixed_date_formula'"
+                    required="delay_type == 'fixed_date_formula'"
+                    width="80"/>
+                <field name="fixed_month_formula"
+                    string="Mes"
+                    invisible="delay_type != 'fixed_date_formula'"
+                    required="delay_type == 'fixed_date_formula'"
+                    width="100"/>
+            </xpath>
+
+            <!-- Hide nb_days when using fixed_date_formula -->
+            <xpath expr="//field[@name='line_ids']//tree//field[@name='nb_days']"
+                   position="attributes">
+                <attribute name="invisible">delay_type == 'fixed_date_formula'</attribute>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>
