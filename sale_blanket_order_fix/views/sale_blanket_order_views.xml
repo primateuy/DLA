@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <!--
+        Habilita la edición de líneas con el Acuerdo Comercial confirmado
+        ("open"):
+          - Cantidad original (original_uom_qty): editable en 'draft' y
+            'open'. Bloqueada solo en 'done'/'expired'.
+          - Resto de campos de una línea YA EXISTENTE (producto, precio,
+            impuestos, uom, fecha, descripción): quedan bloqueados en
+            cuanto el pedido sale de 'draft' (truco `... and id`: `id` es
+            falsy en una fila nueva todavía no guardada, por lo que una
+            línea NUEVA sí puede cargar producto y precio libremente).
+        El borrado de líneas ya existentes fuera de 'draft' se bloquea a
+        nivel de MODELO (unlink() en sale_blanket_order_line.py), no acá:
+        el atributo delete="..." de <tree> en Odoo solo admite un
+        booleano estático ("0"/"1"), no una expresión evaluada por
+        registro como "state == 'draft'" (verificado contra
+        list_arch_parser.js / getActiveActions de Odoo 17.0) — usarlo así
+        habría sido un bloqueo falso, silenciosamente ignorado.
+
+        DIFERENCIA CLAVE vs. la versión 19.0 de este mismo módulo: en
+        17.0 el arch de sale_blanket_order usa el tag <tree>, no <list>
+        (el rename de tag ocurrió en una versión posterior de Odoo). Los
+        XPath de abajo apuntan a <tree> por eso. El resto del arch
+        (atributos, orden de campos, contexts) es IDÉNTICO al de 19.0 —
+        verificado línea por línea contra el código fuente real de
+        OCA/sale-workflow rama 17.0.
+    -->
+    <record id="view_blanket_order_form_editable_lines" model="ir.ui.view">
+        <field name="name">sale.blanket.order.form.editable.lines</field>
+        <field name="model">sale.blanket.order</field>
+        <field name="inherit_id" ref="sale_blanket_order.view_blanket_order_form" />
+        <field name="arch" type="xml">
+
+            <!-- Ya no se bloquea todo el one2many en 'open', solo en
+                 'done'/'expired' -->
+            <xpath expr="//field[@name='line_ids']" position="attributes">
+                <attribute name="readonly">state in ('done', 'expired')</attribute>
+            </xpath>
+
+            <!-- Aseguramos que 'id' esté disponible en el contexto de la
+                 fila para poder distinguir línea nueva vs. existente -->
+            <xpath expr="//field[@name='line_ids']/tree/field[@name='company_id']" position="after">
+                <field name="id" column_invisible="True" />
+            </xpath>
+
+            <!-- Cantidad original: editable en draft y open -->
+            <xpath expr="//field[@name='line_ids']/tree/field[@name='original_uom_qty']" position="attributes">
+                <attribute name="readonly">parent.state in ('done', 'expired')</attribute>
+            </xpath>
+
+            <!-- Resto de campos de la línea: bloqueados solo si la fila
+                 ya existe (id) y el pedido no está en draft. Se excluyen
+                 sequence/display_type (técnicos) y original_uom_qty/id
+                 (tratados aparte). -->
+            <xpath expr="//field[@name='line_ids']/tree/field[
+                @name!='sequence'
+                and @name!='display_type'
+                and @name!='original_uom_qty'
+                and @name!='company_id'
+                and @name!='id'
+            ]" position="attributes">
+                <attribute name="readonly">parent.state != 'draft' and id</attribute>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

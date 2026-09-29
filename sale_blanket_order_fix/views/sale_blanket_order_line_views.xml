@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <!-- Agrega el estado del Acuerdo Comercial a la vista de líneas
+         (menú Ventas > ... > Blanket Order Lines) para poder verlo en
+         pantalla y agrupar por estado y por acuerdo.
+
+         Este archivo es IDÉNTICO al de la versión 19.0 de este módulo:
+         los xmlid sale_blanket_order_line_tree / _search y el campo
+         order_id que usamos como anchor de los XPath son los mismos en
+         OCA/sale-workflow 17.0 y en OCA/sale-blanket 19.0 (verificado
+         contra el código fuente real de ambas ramas). No depende de si
+         la vista usa <tree> o <list> por dentro. -->
+    <record id="view_sale_blanket_order_line_tree_add_state" model="ir.ui.view">
+        <field name="name">sale.blanket.order.line.tree.state</field>
+        <field name="model">sale.blanket.order.line</field>
+        <field name="inherit_id" ref="sale_blanket_order.sale_blanket_order_line_tree" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='order_id']" position="after">
+                <field name="order_state" string="Estado del acuerdo" />
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_sale_blanket_order_line_search_add_state" model="ir.ui.view">
+        <field name="name">sale.blanket.order.line.search.state</field>
+        <field name="model">sale.blanket.order.line</field>
+        <field name="inherit_id" ref="sale_blanket_order.sale_blanket_order_line_search" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='order_id']" position="after">
+                <field name="order_state" string="Estado del acuerdo" />
+            </xpath>
+            <xpath expr="//search" position="inside">
+                <group expand="0" string="Agrupar por">
+                    <filter
+                        name="group_by_order_state"
+                        string="Estado del acuerdo"
+                        context="{'group_by': 'order_state'}"
+                    />
+                    <filter
+                        name="group_by_order"
+                        string="Acuerdo Comercial"
+                        context="{'group_by': 'order_id'}"
+                    />
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
