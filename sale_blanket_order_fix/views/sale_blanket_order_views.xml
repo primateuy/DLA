@@ -33,6 +33,18 @@
         <field name="inherit_id" ref="sale_blanket_order.view_blanket_order_form" />
         <field name="arch" type="xml">
 
+            <!-- Numeración editable por el usuario en cualquier estado
+                 (por defecto la vista de OCA la deja fija con
+                 readonly="1" dentro del <h1>; el complemento a nivel
+                 Python está en models/sale_blanket_order.py). Se apunta
+                 con //h1/field[@name='name'] para no afectar el
+                 <field name="name"/> homónimo de las líneas (usado más
+                 abajo con widget="section_and_note_text") ni el de la
+                 vista de lista. -->
+            <xpath expr="//h1/field[@name='name']" position="attributes">
+                <attribute name="readonly">0</attribute>
+            </xpath>
+
             <!-- Ya no se bloquea todo el one2many en 'open', solo en
                  'done'/'expired' -->
             <xpath expr="//field[@name='line_ids']" position="attributes">

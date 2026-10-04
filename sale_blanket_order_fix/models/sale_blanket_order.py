@@ -1,10 +1,51 @@
 # Copyright 2026
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html)
-from odoo import models
+from odoo import fields, models
 
 
 class SaleBlanketOrder(models.Model):
     _inherit = "sale.blanket.order"
+
+    # ``sale_blanket_order`` define "name" como Char(readonly=True): el
+    # número queda bloqueado en toda vista salvo que el propio arch lo
+    # anule explícitamente. Acá solo tocamos el atributo que cambia; el
+    # resto (default="Draft", copy=False) se hereda de la definición
+    # original vía el mecanismo estándar de fusión de atributos de Odoo
+    # al extender un modelo por herencia clásica. El desbloqueo visual
+    # real ocurre en la vista (ver views/sale_blanket_order_views.xml,
+    # xpath sobre //h1/field[@name='name']); este cambio a nivel Python
+    # es defensivo, para que cualquier vista que no fije "readonly"
+    # explícitamente también respete la intención de campo editable.
+    name = fields.Char(readonly=False)
+
+    # ``sale_blanket_order`` define "note" como Text plano: se visualiza
+    # sin formato. En ``sale.order`` el mismo campo ("Terms and
+    # conditions") es un fields.Html, lo que habilita el editor
+    # enriquecido (widget html) automáticamente, sin tocar la vista.
+    # Html hereda de Text (mismo column_type "text" en PostgreSQL), por
+    # lo que el cambio de tipo no requiere migración de columna y es
+    # reversible al desinstalar: el campo vuelve a ser Text y el
+    # contenido HTML ya guardado se sigue viendo (como texto con las
+    # etiquetas visibles), sin pérdida de información.
+    note = fields.Html()
+
+    def _get_lang(self):
+        """Idioma a usar para textos traducibles del pedido (producto,
+        descripción de venta, etc.), igual que ``sale.order._get_lang()``.
+
+        ``sale_blanket_order`` no define ningún equivalente: sin este
+        método, la descripción de línea (ver
+        ``sale_blanket_order_line.onchange_product()``) se arma en el
+        idioma de sesión de quien está cargando el pedido, no en el del
+        cliente — distinto del estándar de Odoo, donde una cotización en
+        español armada para un cliente con idioma inglés describe los
+        productos en inglés (lo que el cliente va a leer), más allá del
+        idioma de quien la carga.
+        """
+        self.ensure_one()
+        if self.partner_id.lang and not self.partner_id.is_public:
+            return self.partner_id.lang
+        return self.env.lang
 
     def action_confirm(self):
         """Evita que se reasigne el número al reconfirmar.
