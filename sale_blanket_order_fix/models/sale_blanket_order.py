@@ -1,6 +1,11 @@
 # Copyright 2026
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html)
+import logging
+
 from odoo import fields, models
+from odoo.tools.sql import index_exists
+
+_logger = logging.getLogger(__name__)
 
 
 class SaleBlanketOrder(models.Model):
@@ -36,6 +41,55 @@ class SaleBlanketOrder(models.Model):
     # vacíos en vez de heredar los de la compañía.
     # Para `name` (Char sobre Char) no hace falta: ahí sí se fusionan.
     note = fields.Html(default=lambda self: self._default_note())
+
+    _NAME_UNIQUE_INDEX = "sale_blanket_order_fix_name_company_uniq"
+
+    def init(self):
+        """Índice único parcial sobre el número del acuerdo.
+
+        Al hacer ``name`` editable por el usuario se pierde la garantía de
+        unicidad que daba la secuencia. Un ``_sql_constraints`` normal no
+        sirve: tiene que dejar convivir varios borradores con el valor por
+        defecto "Draft", así que hace falta un índice PARCIAL.
+
+        Si la base ya tiene números repetidos, se avisa y no se crea el
+        índice, en vez de romper la instalación o la actualización.
+        """
+        super().init()
+        if index_exists(self.env.cr, self._NAME_UNIQUE_INDEX):
+            return
+
+        self.env.cr.execute(
+            """
+            SELECT name, COALESCE(company_id, 0) AS company, COUNT(*)
+              FROM sale_blanket_order
+             WHERE name IS NOT NULL AND name <> 'Draft'
+             GROUP BY name, COALESCE(company_id, 0)
+            HAVING COUNT(*) > 1
+            """
+        )
+        duplicados = self.env.cr.fetchall()
+        if duplicados:
+            _logger.warning(
+                "sale_blanket_order_fix: no se crea el índice único de "
+                "numeración porque ya hay números repetidos: %s. "
+                "Corrija los duplicados y vuelva a actualizar el módulo.",
+                ", ".join(f"{name} (x{count})" for name, _company, count in duplicados),
+            )
+            return
+
+        self.env.cr.execute(
+            """
+            CREATE UNIQUE INDEX %s
+                ON sale_blanket_order (name, COALESCE(company_id, 0))
+             WHERE name IS NOT NULL AND name <> 'Draft'
+            """
+            % self._NAME_UNIQUE_INDEX
+        )
+        _logger.info(
+            "sale_blanket_order_fix: índice único de numeración creado (%s).",
+            self._NAME_UNIQUE_INDEX,
+        )
 
     def _get_lang(self):
         """Idioma a usar para textos traducibles del pedido (producto,
