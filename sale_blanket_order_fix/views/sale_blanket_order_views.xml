@@ -62,17 +62,71 @@
                 <attribute name="readonly">parent.state in ('done', 'expired')</attribute>
             </xpath>
 
-            <!-- Resto de campos de la línea: bloqueados solo si la fila
-                 ya existe (id) y el pedido no está en draft. Se excluyen
-                 sequence/display_type (técnicos) y original_uom_qty/id
-                 (tratados aparte). -->
-            <xpath expr="//field[@name='line_ids']/tree/field[
-                @name!='sequence'
-                and @name!='display_type'
-                and @name!='original_uom_qty'
-                and @name!='company_id'
-                and @name!='id'
-            ]" position="attributes">
+            <!-- Resto de campos de una línea YA EXISTENTE: bloqueados si
+                 la fila ya existe (`id` es falsy en una fila nueva sin
+                 guardar) y el acuerdo no está en borrador.
+
+                 IMPORTANTE: va un xpath POR CAMPO, no uno compuesto. Odoo
+                 aplica `position="attributes"` a un solo nodo: en
+                 odoo/tools/template_inheritance.py, locate_node() termina en
+                 `return nodes[0] if nodes else None`. Un xpath que matchea
+                 varios campos solo modifica el primero, y el resto queda
+                 editable en silencio.
+
+                 `product_uom` aparece dos veces en el arch de OCA (una por
+                 cada valor de `groups`), así que necesita sus dos xpath.
+                 Se excluyen sequence/display_type/company_id/id (técnicos) y
+                 original_uom_qty (tratado arriba). -->
+
+            <xpath expr="//field[@name='line_ids']/tree/field[@name='product_id']" position="attributes">
+                <attribute name="readonly">parent.state != 'draft' and id</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='line_ids']/tree/field[@name='name']" position="attributes">
+                <attribute name="readonly">parent.state != 'draft' and id</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='line_ids']/tree/field[@name='analytic_distribution']" position="attributes">
+                <attribute name="readonly">parent.state != 'draft' and id</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='line_ids']/tree/field[@name='product_uom' and @groups='!uom.group_uom']" position="attributes">
+                <attribute name="readonly">parent.state != 'draft' and id</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='line_ids']/tree/field[@name='product_uom' and @groups='uom.group_uom']" position="attributes">
+                <attribute name="readonly">parent.state != 'draft' and id</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='line_ids']/tree/field[@name='price_unit']" position="attributes">
+                <attribute name="readonly">parent.state != 'draft' and id</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='line_ids']/tree/field[@name='date_schedule']" position="attributes">
+                <attribute name="readonly">parent.state != 'draft' and id</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='line_ids']/tree/field[@name='ordered_uom_qty']" position="attributes">
+                <attribute name="readonly">parent.state != 'draft' and id</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='line_ids']/tree/field[@name='invoiced_uom_qty']" position="attributes">
+                <attribute name="readonly">parent.state != 'draft' and id</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='line_ids']/tree/field[@name='delivered_uom_qty']" position="attributes">
+                <attribute name="readonly">parent.state != 'draft' and id</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='line_ids']/tree/field[@name='remaining_uom_qty']" position="attributes">
+                <attribute name="readonly">parent.state != 'draft' and id</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='line_ids']/tree/field[@name='taxes_id']" position="attributes">
+                <attribute name="readonly">parent.state != 'draft' and id</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='line_ids']/tree/field[@name='price_subtotal']" position="attributes">
                 <attribute name="readonly">parent.state != 'draft' and id</attribute>
             </xpath>
 
