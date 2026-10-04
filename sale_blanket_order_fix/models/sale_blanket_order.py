@@ -27,7 +27,15 @@ class SaleBlanketOrder(models.Model):
     # reversible al desinstalar: el campo vuelve a ser Text y el
     # contenido HTML ya guardado se sigue viendo (como texto con las
     # etiquetas visibles), sin pérdida de información.
-    note = fields.Html()
+    # OJO: al cambiar la CLASE del campo (Text -> Html) Odoo descarta
+    # todos los atributos de la definición original. En
+    # odoo/fields.py::_get_attrs, si `isinstance(self, type(field))` da
+    # False se ejecuta `attrs.clear()`; y en Odoo 17 `Html` NO hereda de
+    # `Text` (ambas son hermanas bajo `_String`). Sin repetir el default
+    # acá, los acuerdos nuevos se crean con Términos y Condiciones
+    # vacíos en vez de heredar los de la compañía.
+    # Para `name` (Char sobre Char) no hace falta: ahí sí se fusionan.
+    note = fields.Html(default=lambda self: self._default_note())
 
     def _get_lang(self):
         """Idioma a usar para textos traducibles del pedido (producto,
