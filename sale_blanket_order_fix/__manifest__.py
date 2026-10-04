@@ -9,11 +9,11 @@
         "términos y condiciones en texto enriquecido y descripción de "
         "línea con el detalle de la variante en el idioma del cliente."
     ),
-    "version": "17.0.1.2.1",
+    "version": "17.0.1.2.2",
     "category": "Sales/Sales",
     "license": "AGPL-3",
-    "author": "Tu Empresa, Odoo Community Association (OCA)",
-    "website": "https://github.com/OCA/sale-workflow",
+    "author": "Innobyt con revisión PrimateUy",
+    "website": "https://github.com/primateuy/DLA",
     # IMPORTANTE (17.0): la dependencia técnica sigue llamándose
     # "sale_blanket_order", pero para la serie 17.0 ese módulo vive en el
     # repositorio OCA/sale-workflow (rama 17.0), NO en OCA/sale-blanket
