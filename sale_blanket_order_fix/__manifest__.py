@@ -4,13 +4,15 @@
     "name": "Sale Blanket Order - Fix numbering & editable lines",
     "summary": (
         "Corrige la renumeración al reconfirmar un Acuerdo Comercial "
-        "(sale.blanket.order) y permite editar cantidades / agregar "
-        "líneas una vez confirmado."
+        "(sale.blanket.order), permite editar cantidades / agregar "
+        "líneas una vez confirmado, habilita numeración editable, "
+        "términos y condiciones en texto enriquecido y descripción de "
+        "línea con el detalle de la variante en el idioma del cliente."
     ),
-    "version": "17.0.1.0.0",
+    "version": "17.0.1.2.1",
     "category": "Sales/Sales",
     "license": "AGPL-3",
-    "author": "PrimateUY, Odoo Community Association (OCA)",
+    "author": "Tu Empresa, Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/sale-workflow",
     # IMPORTANTE (17.0): la dependencia técnica sigue llamándose
     # "sale_blanket_order", pero para la serie 17.0 ese módulo vive en el

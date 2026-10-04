@@ -1,11 +1,55 @@
 # Copyright 2026
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html)
-from odoo import _, fields, models
+from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
 
 class SaleBlanketOrderLine(models.Model):
     _inherit = "sale.blanket.order.line"
+
+    @api.onchange("product_id", "original_uom_qty")
+    def onchange_product(self):
+        """Iguala la descripción de línea a la de sale.order (variante
+        incluida).
+
+        ``sale_blanket_order`` arma "name" a mano: ``self.product_id.name``
+        (+ ``[code]`` + ``description_sale``). El problema es que
+        ``product.product.name`` está delegado a
+        ``product.template.name`` (mecanismo ``_inherits``): es el
+        nombre de la PLANTILLA, sin las particularidades de la variante
+        (talle, color, etc.). Dos variantes del mismo producto terminan
+        con idéntico texto de línea.
+
+        ``sale.order`` resuelve exactamente este caso con
+        ``product.product.get_product_multiline_description_sale()``
+        (definido en el módulo base ``product``, no en ``sale``: siempre
+        disponible), que arma la descripción a partir de
+        ``display_name`` — plantilla + "(atributos de variante)", con el
+        prefijo "[código]" si corresponde — más ``description_sale`` en
+        una segunda línea. Se llama primero a la implementación
+        original (no se toca product_uom / price_unit / taxes_id, que
+        siguen siendo correctos) y se corrige únicamente "name" después.
+
+        Idioma: igual que ``sale.order.line._compute_name()``, la
+        descripción se arma en el idioma del CLIENTE
+        (``order_id._get_lang()``: idioma del partner si tiene uno
+        configurado y no es el partner público, si no el idioma de
+        sesión de quien carga el pedido), no necesariamente en el
+        idioma de quien está armando el Acuerdo Comercial. Así, nombre
+        de producto, descripción de venta y nombre de la variante
+        (todos campos traducibles) salen en el idioma que va a leer el
+        cliente en el PDF/portal, igual que en una orden de venta
+        estándar.
+        """
+        result = super().onchange_product()
+        if self.product_id:
+            line = self
+            if self.order_id:
+                lang = self.order_id._get_lang()
+                if lang != self.env.lang:
+                    line = self.with_context(lang=lang)
+            self.name = line.product_id.get_product_multiline_description_sale()
+        return result
 
     # Campo relacionado y almacenado para poder mostrar el estado del
     # Acuerdo Comercial en la vista de líneas y, sobre todo, para poder
