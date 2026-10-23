@@ -19,7 +19,14 @@ mismos msgid/msgstr) y se verificó que update_field_translations() existe
 con la misma firma en odoo/models.py de la rama 17.0 de odoo/odoo.
 """
 
-LANG = "es"
+import logging
+
+_logger = logging.getLogger(__name__)
+
+# Prefijo del idioma a tocar. Se resuelve contra los idiomas realmente
+# activos en la base: el relabel tiene que aplicar tanto si está
+# instalado "es" como una variante regional ("es_UY", "es_AR", ...).
+LANG_PREFIX = "es"
 
 # Campos Char/Text simples (translate=True): ir.model.name,
 # ir.actions.act_window.name, ir.ui.menu.name, ir.model.fields.field_description.
@@ -86,31 +93,52 @@ _ARCH_TRANSLATIONS = [
 ]
 
 
-def _spanish_is_installed(env):
-    return LANG in {code for code, _name in env["res.lang"].get_installed()}
+def _spanish_langs(env):
+    """Idiomas activos que son español, incluidas las variantes regionales.
+
+    ``res.lang.get_installed()`` devuelve el ``code`` de cada idioma
+    activo. En una base uruguaya ese código es ``es_UY``, no ``es``:
+    comparar contra ``"es"`` a secas hacía que los hooks no aplicaran
+    nada y el relabel fallara en silencio.
+    """
+    return [
+        code
+        for code, _name in env["res.lang"].get_installed()
+        if code == LANG_PREFIX or code.startswith(LANG_PREFIX + "_")
+    ]
 
 
 def _apply_translations(env, *, restore):
     """``restore=False`` aplica "Acuerdo Comercial"; ``restore=True``
     vuelve exactamente al texto original de OCA."""
-    if not _spanish_is_installed(env):
-        # No hay idioma español instalado en esta base: nada que tocar,
-        # nada que restaurar.
+    langs = _spanish_langs(env)
+    if not langs:
+        _logger.info(
+            "sale_blanket_order_fix: no hay ningún idioma español activo, "
+            "no se aplica el relabel de 'Pedido Programado'."
+        )
         return
 
-    for xmlid, field_name, es_oca, es_nuevo in _FIELD_TRANSLATIONS:
-        record = env.ref(xmlid, raise_if_not_found=False)
-        if record:
-            record.update_field_translations(
-                field_name, {LANG: es_oca if restore else es_nuevo}
-            )
+    for lang in langs:
+        for xmlid, field_name, es_oca, es_nuevo in _FIELD_TRANSLATIONS:
+            record = env.ref(xmlid, raise_if_not_found=False)
+            if record:
+                record.update_field_translations(
+                    field_name, {lang: es_oca if restore else es_nuevo}
+                )
 
-    for xmlid, en_term, es_oca, es_nuevo in _ARCH_TRANSLATIONS:
-        record = env.ref(xmlid, raise_if_not_found=False)
-        if record:
-            record.update_field_translations(
-                "arch_db", {LANG: {en_term: es_oca if restore else es_nuevo}}
-            )
+        for xmlid, en_term, es_oca, es_nuevo in _ARCH_TRANSLATIONS:
+            record = env.ref(xmlid, raise_if_not_found=False)
+            if record:
+                record.update_field_translations(
+                    "arch_db", {lang: {en_term: es_oca if restore else es_nuevo}}
+                )
+
+    _logger.info(
+        "sale_blanket_order_fix: relabel %s aplicado sobre %s.",
+        "revertido" if restore else "'Acuerdo Comercial'",
+        ", ".join(langs),
+    )
 
 
 def post_init_hook(env):
