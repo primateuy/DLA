@@ -7,13 +7,15 @@
         "(sale.blanket.order), permite editar cantidades / agregar "
         "líneas una vez confirmado, habilita numeración editable, "
         "términos y condiciones en texto enriquecido y descripción de "
-        "línea con el detalle de la variante en el idioma del cliente."
+        "línea con el detalle de la variante en el idioma del cliente, "
+        "interruptor de determinación automática del acuerdo en "
+        "líneas de pedido y cantidad inicial en cero en el asistente."
     ),
-    "version": "17.0.1.2.1",
+    "version": "17.0.1.3.1",
     "category": "Sales/Sales",
     "license": "AGPL-3",
-    "author": "Tu Empresa, Odoo Community Association (OCA)",
-    "website": "https://github.com/OCA/sale-workflow",
+    "author": "Innobyt con revisión PrimateUy",
+    "website": "https://github.com/primateuy/DLA",
     # IMPORTANTE (17.0): la dependencia técnica sigue llamándose
     # "sale_blanket_order", pero para la serie 17.0 ese módulo vive en el
     # repositorio OCA/sale-workflow (rama 17.0), NO en OCA/sale-blanket
@@ -26,6 +28,8 @@
     "data": [
         "views/sale_blanket_order_views.xml",
         "views/sale_blanket_order_line_views.xml",
+        "views/sale_order_views.xml",
+        "views/res_config_settings_views.xml",
     ],
     "installable": True,
     "application": False,

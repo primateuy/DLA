@@ -1,7 +1,8 @@
 # Copyright 2026
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html)
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
+from odoo.tools import float_compare
 
 
 class SaleBlanketOrderLine(models.Model):
@@ -61,6 +62,46 @@ class SaleBlanketOrderLine(models.Model):
         store=True,
         readonly=True,
     )
+
+    @api.constrains("original_uom_qty")
+    def _check_qty_not_below_ordered(self):
+        """La cantidad no puede quedar por debajo de lo ya librado.
+
+        ``remaining_uom_qty`` es ``original_uom_qty - ordered_uom_qty``, sin
+        piso (blanket_orders.py). Al habilitar la edición de cantidades sobre
+        un acuerdo confirmado, bajar la cantidad por debajo de lo ya pedido
+        deja el saldo en negativo, con dos consecuencias:
+
+        - ``_compute_state`` evalúa ``float_is_zero(sum(remaining_uom_qty))``:
+          con líneas positivas y negativas la suma puede dar cero por
+          casualidad y el acuerdo pasa a 'done' teniendo saldo pendiente.
+        - ``sale.order._check_exchausted_blanket_order_line`` bloquea
+          confirmar CUALQUIER pedido de venta que referencie una línea con
+          saldo negativo, con lo que un ajuste de cantidad bien intencionado
+          puede dejar clavados los pedidos contra ese acuerdo.
+        """
+        for line in self:
+            if line.display_type or line.order_id.state == "draft":
+                continue
+            if (
+                float_compare(
+                    line.original_uom_qty,
+                    line.ordered_uom_qty,
+                    precision_rounding=line.product_uom.rounding or 0.01,
+                )
+                < 0
+            ):
+                raise ValidationError(
+                    _(
+                        "No se puede dejar la cantidad (%(qty)s) por debajo de "
+                        "lo ya pedido (%(ordered)s) en la línea «%(line)s». "
+                        "Si necesita reducirla, cancele antes los pedidos de "
+                        "venta correspondientes.",
+                        qty=line.original_uom_qty,
+                        ordered=line.ordered_uom_qty,
+                        line=line.name or line.product_id.display_name,
+                    )
+                )
 
     def write(self, values):
         """Respaldo defensivo a nivel de modelo (no solo de vista).
