@@ -7,9 +7,11 @@
         "(sale.blanket.order), permite editar cantidades / agregar "
         "líneas una vez confirmado, habilita numeración editable, "
         "términos y condiciones en texto enriquecido y descripción de "
-        "línea con el detalle de la variante en el idioma del cliente."
+        "línea con el detalle de la variante en el idioma del cliente, "
+        "interruptor de determinación automática del acuerdo en "
+        "líneas de pedido y cantidad inicial en cero en el asistente."
     ),
-    "version": "17.0.1.2.2",
+    "version": "17.0.1.3.1",
     "category": "Sales/Sales",
     "license": "AGPL-3",
     "author": "Innobyt con revisión PrimateUy",
