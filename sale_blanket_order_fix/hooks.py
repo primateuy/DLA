@@ -21,6 +21,8 @@ con la misma firma en odoo/models.py de la rama 17.0 de odoo/odoo.
 
 import logging
 
+from .models.params import ALL_PARAMS
+
 _logger = logging.getLogger(__name__)
 
 # Prefijo del idioma a tocar. Se resuelve contra los idiomas realmente
@@ -154,5 +156,13 @@ def post_init_hook(env):
 
 def uninstall_hook(env):
     """Restaura la traducción original de sale_blanket_order (OCA) para
-    dejar la instalación base exactamente como estaba."""
+    dejar la instalación base exactamente como estaba. También elimina los
+    parámetros de sistema propios (ir.config_parameter no pertenece al
+    módulo vía XML-ID, así que no se borra solo)."""
     _apply_translations(env, restore=True)
+    params = (
+        env["ir.config_parameter"]
+        .sudo()
+        .search([("key", "in", list(ALL_PARAMS))])
+    )
+    params.unlink()

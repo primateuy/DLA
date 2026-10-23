@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <!-- Se agregan dos opciones dentro del bloque "Pedidos Programados" que
+         ya crea sale_blanket_order en Ajustes > Ventas. -->
+    <record id="res_config_settings_view_form_blanket_fix" model="ir.ui.view">
+        <field name="name">res.config.settings.form (in sale_blanket_order_fix)</field>
+        <field name="model">res.config.settings</field>
+        <field
+            name="inherit_id"
+            ref="sale_blanket_order.sale_config_settings_form_view"
+        />
+        <field name="arch" type="xml">
+            <xpath
+                expr="//block[@name='blanket_orders_setting_container']"
+                position="inside"
+            >
+                <setting
+                    id="blanket_auto_assign_line"
+                    string="Determinación automática del acuerdo"
+                    help="Si está tildado (estándar de OCA) el sistema asigna y reasigna solo el Acuerdo Comercial de cada línea del pedido de venta. Si se destilda, el usuario siempre lo elige a mano."
+                >
+                    <field name="blanket_auto_assign_line" />
+                </setting>
+                <setting
+                    id="blanket_wizard_zero_qty"
+                    string="Cantidad inicial en cero al crear pedido"
+                    help="Si está tildado, el asistente 'Crear pedido' propone cantidad 0 y el usuario debe cargar la cantidad a pedir de cada línea."
+                >
+                    <field name="blanket_wizard_zero_qty" />
+                </setting>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
