@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <!--
+        Modo manual de asignación del acuerdo (Ajustes > Ventas > Pedidos
+        Programados). La columna "Acuerdo" (blanket_order_line) de OCA solo
+        se muestra si el pedido YA tiene un acuerdo vinculado
+        (column_invisible="not parent.blanket_order_id"). Con la
+        determinación automática desactivada, un pedido nuevo nunca
+        tendría vínculo y el usuario no podría elegir el acuerdo: por eso
+        se muestra siempre cuando blanket_manual_mode es True.
+
+        También se agrega un dominio de vista (mismo producto, mismo
+        cliente, acuerdo abierto) para que el desplegable sólo ofrezca
+        acuerdos coherentes aun al editar una línea ya guardada, caso en
+        que no se dispara el onchange que devuelve el dominio.
+    -->
+    <record id="view_order_form_blanket_manual_mode" model="ir.ui.view">
+        <field name="name">sale.order.form.blanket.manual.mode</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale_blanket_order.view_order_form" />
+        <field name="arch" type="xml">
+            <field name="blanket_order_id" position="after">
+                <field name="blanket_manual_mode" invisible="1" />
+            </field>
+            <xpath
+                expr="//field[@name='order_line']//tree/field[@name='blanket_order_line']"
+                position="attributes"
+            >
+                <attribute
+                    name="column_invisible"
+                >not parent.blanket_order_id and not parent.blanket_manual_mode</attribute>
+                <attribute
+                    name="domain"
+                >[('product_id', '=', product_id), ('order_id.state', '=', 'open'), ('partner_id', '=', parent.partner_id)]</attribute>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
