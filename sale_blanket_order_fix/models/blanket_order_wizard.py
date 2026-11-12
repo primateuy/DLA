@@ -23,3 +23,20 @@ class BlanketOrderWizard(models.TransientModel):
                 # fields.Command.create(vals) == (0, 0, vals)
                 command[2]["qty"] = 0.0
         return commands
+
+    def _prepare_so_line_vals(self, line):
+        """Copia la descripción de la línea del acuerdo a la línea del pedido.
+
+        OCA arma ``name`` con ``line.product_id.name``: el nombre de la
+        PLANTILLA del producto, ignorando la descripción de la línea del
+        acuerdo (``blanket_line_id.name``). Se pierden así la variante, el
+        texto de ``description_sale`` y cualquier ajuste manual que el
+        usuario haya hecho sobre esa descripción. Se pasa a usar la
+        descripción de la línea del acuerdo; si estuviera vacía se
+        conserva el valor de OCA.
+        """
+        vals = super()._prepare_so_line_vals(line)
+        description = line.blanket_line_id.name
+        if description:
+            vals["name"] = description
+        return vals

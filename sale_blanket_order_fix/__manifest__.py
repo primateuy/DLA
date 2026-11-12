@@ -11,7 +11,7 @@
         "interruptor de determinación automática del acuerdo en "
         "líneas de pedido y cantidad inicial en cero en el asistente."
     ),
-    "version": "17.0.1.3.0",
+    "version": "17.0.1.3.1",
     "category": "Sales/Sales",
     "license": "AGPL-3",
     "author": "Tu Empresa, Odoo Community Association (OCA)",
