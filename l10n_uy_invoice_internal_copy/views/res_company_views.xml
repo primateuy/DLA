@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Los parámetros de la leyenda van en la pestaña "Conexión CFE" que
+         agrega l10n_uy_einvoice_base, junto al resto de la config de FE. -->
+    <record id="view_company_form_internal_copy" model="ir.ui.view">
+        <field name="name">res.company.form.internal.copy</field>
+        <field name="model">res.company</field>
+        <field name="inherit_id" ref="l10n_uy_einvoice_base.add_nro_on_res_company"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='cfe_connection_page']" position="inside">
+                <group name="internal_copy_group" string="Copia interna de comprobantes">
+                    <field name="internal_copy_watermark" widget="boolean_toggle"/>
+                    <field name="internal_copy_watermark_text"
+                           invisible="not internal_copy_watermark"
+                           placeholder="COPIA INTERNA - SIN VALOR FISCAL"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

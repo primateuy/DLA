@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <!-- Grupo que habilita la impresión de la copia interna. Sin
+             category_id para que aparezca como permiso suelto en el
+             formulario de usuario y no como nivel de la app Contabilidad. -->
+        <record id="group_print_internal_copy" model="res.groups">
+            <field name="name">Imprimir copia interna de comprobantes</field>
+            <field name="comment">Permite imprimir la representación interna de Odoo
+                de facturas y recibos ya enviados a UCFE. Es un documento sin valor
+                fiscal: la representación impresa válida ante DGI es la que emite UCFE.</field>
+        </record>
+
+    </data>
+</odoo>

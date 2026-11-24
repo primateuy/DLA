@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Leyenda que identifica el documento como copia sin valor fiscal.
+         Se activa por compañía (res.company.internal_copy_watermark) y el
+         texto es configurable (internal_copy_watermark_text). -->
+    <template id="internal_copy_banner" name="Leyenda de copia interna">
+        <t t-set="company" t-value="o.company_id"/>
+        <t t-if="company.internal_copy_watermark">
+            <t t-set="watermark_text"
+               t-value="company.internal_copy_watermark_text or 'COPIA INTERNA - SIN VALOR FISCAL'"/>
+
+            <!-- Marca diagonal. position:fixed hace que wkhtmltopdf la
+                 repita en todas las páginas. La opacidad es deliberadamente
+                 baja: el div se pinta por encima del contenido y con un
+                 color opaco taparía los datos del comprobante. -->
+            <div style="position: fixed; top: 38%; left: 0; width: 100%;
+                        text-align: center; transform: rotate(-30deg);
+                        opacity: 0.13; color: #000000; font-size: 44px;
+                        font-weight: bold; letter-spacing: 3px;">
+                <span t-out="watermark_text">COPIA INTERNA - SIN VALOR FISCAL</span>
+            </div>
+
+            <!-- Banda superior, legible aun si el visor ignora la marca. -->
+            <div style="border: 2px solid #b02a37; color: #b02a37;
+                        padding: 6px 10px; margin-bottom: 12px;
+                        text-align: center; font-weight: bold;
+                        position: relative; z-index: 1;">
+                <span t-out="watermark_text">COPIA INTERNA - SIN VALOR FISCAL</span>
+            </div>
+        </t>
+    </template>
+
+    <!-- Inserta la leyenda en la factura estándar. La variable internal_copy
+         solo la define el wrapper de copia interna; en el reporte oficial
+         queda indefinida (falsy en QWeb) y no se imprime nada. -->
+    <template id="report_invoice_document_internal_copy"
+              inherit_id="account.report_invoice_document">
+        <xpath expr="//t[@t-set='forced_vat']" position="after">
+            <t t-if="internal_copy">
+                <t t-call="l10n_uy_invoice_internal_copy.internal_copy_banner"/>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- Idem para el recibo de pago. -->
+    <template id="report_payment_receipt_document_internal_copy"
+              inherit_id="account.report_payment_receipt_document">
+        <xpath expr="//t[@t-set='values']" position="after">
+            <t t-if="internal_copy">
+                <t t-call="l10n_uy_invoice_internal_copy.internal_copy_banner"/>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- Wrapper de la copia interna de facturas. -->
+    <template id="report_invoice_internal_copy" name="Factura - copia interna">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="lang" t-value="o.partner_id.lang"/>
+                <t t-set="internal_copy" t-value="True"/>
+                <t t-call="account.report_invoice_document" t-lang="lang"/>
+            </t>
+        </t>
+    </template>
+
+    <!-- Wrapper de la copia interna de recibos de pago. -->
+    <template id="report_payment_receipt_internal_copy" name="Recibo - copia interna">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="lang" t-value="o.partner_id.lang or o.company_id.partner_id.lang"/>
+                <t t-set="internal_copy" t-value="True"/>
+                <t t-call="account.report_payment_receipt_document" t-lang="lang"/>
+            </t>
+        </t>
+    </template>
+
+</odoo>
