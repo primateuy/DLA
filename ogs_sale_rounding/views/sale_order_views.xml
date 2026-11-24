@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sale_order_form_rounding" model="ir.ui.view">
+        <field name="name">sale.order.form.rounding</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='journal_id']" position="before">
+                <field name="invoice_cash_rounding_id"
+                       options="{'no_create': True}"
+                       string="Cash Rounding"
+                       readonly="state != 'draft'"/>
+            </xpath>
+
+            <xpath expr="//field[@name='tax_totals']" position="after">
+                <div class="d-flex justify-content-between oe_subtotal_footer"
+                     invisible="not invoice_cash_rounding_id">
+
+                    <label for="amount_rounding" string="Rounding"
+                           class="oe_form_label"/>
+
+                    <field name="amount_rounding"
+                           widget="monetary"
+                           options="{'currency_field': 'currency_id'}"
+                           readonly="1"
+                           nolabel="1"/>
+
+                </div>
+            </xpath>
+
+
+        </field>
+    </record>
+</odoo>
